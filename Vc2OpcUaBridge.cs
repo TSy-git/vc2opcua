@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -259,10 +260,20 @@ namespace vc2opcua
         }
 
         /// <summary>
-        /// Sets value of OPCUA node signal to corresponding VC signal
+        /// Event handler for when a signal node has changed value.
         /// </summary>
         private void ua_SignalTriggered(ISystemContext context, NodeState node, NodeStateChangeMasks changes)
         {
+            // VC API is not thread-safe, it must be accessed from the main thread only.
+            Execute.OnUIThread(() => { UpdateValueToVcSignal(node); });
+        }
+
+        /// <summary>
+        /// Sets value of OPCUA node signal to corresponding VC signal
+        /// </summary>
+        private void UpdateValueToVcSignal(NodeState node)
+        {
+            Debug.Assert(System.Threading.Thread.CurrentThread == System.Windows.Application.Current.Dispatcher.Thread);
 
             if (!UaBrowseName2VcComponentName.ContainsKey(node.BrowseName.Name))
             {
@@ -386,10 +397,20 @@ namespace vc2opcua
         }
 
         /// <summary>
-        /// Sets value of OPCUA node property to corresponding VC property
+        /// Event handler for when a property node has changed value.
         /// </summary>
         private void ua_PropertyChanged(ISystemContext context, NodeState node, NodeStateChangeMasks changes)
         {
+            // VC API is not thread-safe, it must be accessed from the main thread only.
+            Execute.OnUIThread(() => { UpdateValueToVcProperty(node); });
+        }
+
+        /// <summary>
+        /// Sets value of OPCUA node property to corresponding VC property
+        /// </summary>
+        private void UpdateValueToVcProperty(NodeState node)
+        {
+            Debug.Assert(System.Threading.Thread.CurrentThread == System.Windows.Application.Current.Dispatcher.Thread);
 
             if (!UaBrowseName2VcComponentName.ContainsKey(node.BrowseName.Name))
             {
